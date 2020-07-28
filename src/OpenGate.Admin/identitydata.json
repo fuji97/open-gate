@@ -1,0 +1,25 @@
+﻿{
+  "IdentityData": {
+    "Roles": [
+      {
+        "Name": "Admin"
+      }
+    ],
+    "Users": [
+      {
+        "Username": "admin",
+        "Password": "PaF:\Git\C#\open-gate\word123",
+        "Email": "admin@opengate.com",
+        "Roles": [
+          "Admin"
+        ],
+        "Claims": [
+          {
+            "Type": "name",
+            "Value": "admin"
+          }
+        ]
+      }
+    ]
+  }
+}
