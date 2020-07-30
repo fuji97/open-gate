@@ -107,7 +107,7 @@ namespace OpenGate.STS.Identity.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(model);
+                return RedirectToAction(nameof(Index), model);
             }
 
             var user = await _userManager.GetUserAsync(User);

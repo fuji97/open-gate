@@ -68,6 +68,7 @@ namespace OpenGate.Admin.Controllers
         {
             GenerateNotifications();
 
+            // ReSharper disable once Mvc.ViewNotResolved
             return base.View(model);
         }
     }

@@ -309,13 +309,35 @@ namespace OpenGate.STS.Identity.Helpers
         {
             var externalProviderConfiguration = configuration.GetSection(nameof(ExternalProvidersConfiguration)).Get<ExternalProvidersConfiguration>();
 
-            if (externalProviderConfiguration.UseGitHubProvider)
-            {
-                authenticationBuilder.AddGitHub(options =>
-                {
+            if (externalProviderConfiguration.UseGitHubProvider) {
+                authenticationBuilder.AddGitHub(options => {
                     options.ClientId = externalProviderConfiguration.GitHubClientId;
                     options.ClientSecret = externalProviderConfiguration.GitHubClientSecret;
                     options.Scope.Add("user:email");
+                });
+            }
+
+            if (externalProviderConfiguration.UseGoogleProvider) {
+                authenticationBuilder.AddGoogle(options => {
+                    options.ClientId = externalProviderConfiguration.GoogleClientId;
+                    options.ClientSecret = externalProviderConfiguration.GoogleClientSecret;
+                    options.Scope.Add("email");
+                });
+            }
+            
+            if (externalProviderConfiguration.UseFacebookProvider) {
+                authenticationBuilder.AddFacebook(options => {
+                    options.AppId = externalProviderConfiguration.FacebookAppId;
+                    options.AppSecret = externalProviderConfiguration.FacebookAppSecret;
+                    options.Scope.Add("email");
+                });
+            }
+            
+            if (externalProviderConfiguration.UseTwitterProvider) {
+                authenticationBuilder.AddTwitter(options => {
+                    options.ConsumerKey = externalProviderConfiguration.TwitterClientId;
+                    options.ConsumerSecret = externalProviderConfiguration.TwitterClientSecret;
+                    options.RetrieveUserDetails = true;
                 });
             }
         }
