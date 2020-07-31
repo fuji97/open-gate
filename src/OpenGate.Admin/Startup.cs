@@ -89,6 +89,9 @@ namespace OpenGate.Admin
 
             // Add custom security headers
             app.UseSecurityHeaders();
+            if (env.IsProduction()) {
+                app.UseHsts(options => options.MaxAge(days: 365));
+            }
 
             app.UseStaticFiles();
 

@@ -163,7 +163,7 @@ namespace OpenGate.Admin.Helpers
             {
                 ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
             });
-            app.UseHsts(options => options.MaxAge(days: 365));
+
             app.UseXXssProtection(options => options.EnabledWithBlockMode());
             app.UseXContentTypeOptions();
             app.UseXfo(options => options.SameOrigin());
@@ -219,6 +219,9 @@ namespace OpenGate.Admin.Helpers
             {
                 options.AddPolicy(AuthorizationConsts.AdministrationPolicy,
                     policy => policy.RequireRole(rootConfiguration.AdminConfiguration.AdministrationRole));
+                options.AddPolicy(AuthorizationConsts.ClientManagerPolicy,
+                    policy => policy.RequireRole(rootConfiguration.AdminConfiguration.ClientManagerRole,
+                        rootConfiguration.AdminConfiguration.AdministrationRole));
             });
         }
 

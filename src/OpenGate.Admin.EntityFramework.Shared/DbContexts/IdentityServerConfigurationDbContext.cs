@@ -2,6 +2,7 @@ using IdentityServer4.EntityFramework.DbContexts;
 using IdentityServer4.EntityFramework.Entities;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.EntityFrameworkCore;
+using OpenGate.Admin.EntityFramework.Shared.Entities;
 using Skoruba.IdentityServer4.Admin.EntityFramework.Interfaces;
 
 namespace OpenGate.Admin.EntityFramework.Shared.DbContexts
@@ -44,6 +45,13 @@ namespace OpenGate.Admin.EntityFramework.Shared.DbContexts
         public DbSet<ClientClaim> ClientClaims { get; set; }
 
         public DbSet<ClientProperty> ClientProperties { get; set; }
+        
+        public DbSet<ClientManager> ClientManagers { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder) {
+            modelBuilder.Entity<ClientManager>()
+                .HasKey(c => new {c.ClientId, c.UserId});
+        }
     }
 }
 

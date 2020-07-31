@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -10,19 +11,23 @@ using OpenGate.Admin.ExceptionHandling;
 
 namespace OpenGate.Admin.Controllers
 {
-    [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
+    [Authorize(Policy = AuthorizationConsts.ClientManagerPolicy)]
     [TypeFilter(typeof(ControllerExceptionFilterAttribute))]
     public class HomeController : BaseController
     {
         private readonly ILogger<ConfigurationController> _logger;
+        private IAuthorizationService _authorization;
 
-        public HomeController(ILogger<ConfigurationController> logger) : base(logger)
+        public HomeController(ILogger<ConfigurationController> logger, IAuthorizationService authorizationService) : base(logger)
         {
             _logger = logger;
+            _authorization = authorizationService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var isAdmin = await _authorization.AuthorizeAsync(User, AuthorizationConsts.AdministrationPolicy);
+            ViewBag.IsAdmin = isAdmin.Succeeded;
             return View();
         }
 

@@ -22,7 +22,16 @@
             "environmentVariables": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
-            "applicationUrl": "http://localhost:9000/"
+            "applicationUrl": "https://localhost:9000;http://localhost:9001"
+        },
+        "OpenGate.Admin (with seed)": {
+            "commandName": "Project",
+            "launchBrowser": true,
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "applicationUrl": "https://localhost:9000;http://localhost:9001",
+            "commandLineArgs": "/seed"
         },
         "Docker": {
             "commandName": "Docker",

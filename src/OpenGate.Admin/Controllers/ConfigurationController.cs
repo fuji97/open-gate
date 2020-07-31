@@ -34,6 +34,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.ClientManagerPolicy)]
         [Route("[controller]/[action]")]
         [Route("[controller]/[action]/{id:int}")]
         public async Task<IActionResult> Client(int id)

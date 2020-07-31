@@ -7,6 +7,7 @@ namespace OpenGate.Admin.Configuration
         public string IdentityAdminRedirectUri { get; set; }
         public string[] Scopes { get; set; }
         public string AdministrationRole { get; set; }
+        public string ClientManagerRole { get; set; }
         public bool RequireHttpsMetadata { get; set; }
         public string IdentityAdminCookieName { get; set; }
         public double IdentityAdminCookieExpiresUtcHours { get; set; }

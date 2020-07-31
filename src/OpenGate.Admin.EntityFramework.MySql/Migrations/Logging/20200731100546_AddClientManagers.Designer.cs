@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenGate.Admin.EntityFramework.Shared.DbContexts;
 
 namespace OpenGate.Admin.EntityFramework.MySql.Migrations.Logging
 {
     [DbContext(typeof(AdminLogDbContext))]
-    partial class AdminLogDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200731100546_AddClientManagers")]
+    partial class AddClientManagers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

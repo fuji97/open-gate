@@ -311,12 +311,13 @@ namespace OpenGate.Admin.Api.Helpers
                                 healthQuery: $"SELECT * FROM {auditLogTableName}  LIMIT 1");
                         break;
                     case DatabaseProviderType.MySql:
-                        healthChecksBuilder
+                        // TODO Check why the project crash using MySQL
+                        /*healthChecksBuilder
                             .AddMySql(configurationDbConnectionString, name: "ConfigurationDb")
                             .AddMySql(persistedGrantsDbConnectionString, name: "PersistentGrantsDb")
                             .AddMySql(identityDbConnectionString, name: "IdentityDb")
                             .AddMySql(logDbConnectionString, name: "PersistentGrantsDb")
-                            .AddMySql(auditLogDbConnectionString, name: "IdentityDb");
+                            .AddMySql(auditLogDbConnectionString, name: "IdentityDb");*/
                         break;
                     default:
                         throw new NotImplementedException($"Health checks not defined for database provider {databaseProvider.ProviderType}");

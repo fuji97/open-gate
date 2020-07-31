@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenGate.Admin.EntityFramework.Shared.DbContexts;
 
 namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfiguration
 {
     [DbContext(typeof(IdentityServerConfigurationDbContext))]
-    partial class IdentityServerConfigurationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200731094035_AddClientCreators")]
+    partial class AddClientCreators
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,10 +29,12 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(1000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(1000);
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("Enabled")
                         .HasColumnType("tinyint(1)");
@@ -39,7 +43,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("NonEditable")
                         .HasColumnType("tinyint(1)");
@@ -48,6 +54,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("ApiResources");
                 });
@@ -62,13 +71,15 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApiResourceId");
 
-                    b.ToTable("ApiResourceClaims");
+                    b.ToTable("ApiClaims");
                 });
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.ApiResourceProperty", b =>
@@ -81,16 +92,20 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Key")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.HasKey("Id");
 
                     b.HasIndex("ApiResourceId");
 
-                    b.ToTable("ApiResourceProperties");
+                    b.ToTable("ApiProperties");
                 });
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.ApiScope", b =>
@@ -103,16 +118,20 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(1000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(1000);
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("Emphasize")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("Required")
                         .HasColumnType("tinyint(1)");
@@ -123,6 +142,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                     b.HasKey("Id");
 
                     b.HasIndex("ApiResourceId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("ApiScopes");
                 });
@@ -137,7 +159,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
 
@@ -159,16 +183,21 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(1000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(1000);
 
                     b.Property<DateTime?>("Expiration")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("longtext CHARACTER SET utf8mb4")
+                        .HasMaxLength(4000);
 
                     b.HasKey("Id");
 
@@ -217,19 +246,25 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("BackChannelLogoutUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.Property<string>("ClientClaimsPrefix")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<string>("ClientId")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<string>("ClientName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<string>("ClientUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.Property<int?>("ConsentLifetime")
                         .HasColumnType("int");
@@ -238,7 +273,8 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(1000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(1000);
 
                     b.Property<int>("DeviceCodeLifetime")
                         .HasColumnType("int");
@@ -253,7 +289,8 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("FrontChannelLogoutUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.Property<int>("IdentityTokenLifetime")
                         .HasColumnType("int");
@@ -265,16 +302,20 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("LogoUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.Property<bool>("NonEditable")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("PairWiseSubjectSalt")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<string>("ProtocolType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<int>("RefreshTokenExpiration")
                         .HasColumnType("int");
@@ -301,12 +342,16 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("UserCodeType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(100) CHARACTER SET utf8mb4")
+                        .HasMaxLength(100);
 
                     b.Property<int?>("UserSsoLifetime")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClientId")
+                        .IsUnique();
 
                     b.ToTable("Clients");
                 });
@@ -321,10 +366,14 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.HasKey("Id");
 
@@ -343,7 +392,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Origin")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(150) CHARACTER SET utf8mb4")
+                        .HasMaxLength(150);
 
                     b.HasKey("Id");
 
@@ -362,7 +413,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("GrantType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.HasKey("Id");
 
@@ -381,7 +434,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Provider")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
 
@@ -400,7 +455,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("PostLogoutRedirectUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.HasKey("Id");
 
@@ -419,10 +476,14 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Key")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.HasKey("Id");
 
@@ -441,7 +502,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("RedirectUri")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.HasKey("Id");
 
@@ -460,7 +523,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Scope")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
 
@@ -482,16 +547,21 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.Property<DateTime?>("Expiration")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("longtext CHARACTER SET utf8mb4")
+                        .HasMaxLength(4000);
 
                     b.HasKey("Id");
 
@@ -510,7 +580,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Type")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.HasKey("Id");
 
@@ -529,10 +601,12 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(1000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(1000);
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("Emphasize")
                         .HasColumnType("tinyint(1)");
@@ -541,7 +615,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(200) CHARACTER SET utf8mb4")
+                        .HasMaxLength(200);
 
                     b.Property<bool>("NonEditable")
                         .HasColumnType("tinyint(1)");
@@ -557,6 +633,9 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("IdentityResources");
                 });
 
@@ -570,29 +649,20 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                         .HasColumnType("int");
 
                     b.Property<string>("Key")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(250) CHARACTER SET utf8mb4")
+                        .HasMaxLength(250);
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsRequired()
+                        .HasColumnType("varchar(2000) CHARACTER SET utf8mb4")
+                        .HasMaxLength(2000);
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdentityResourceId");
 
-                    b.ToTable("IdentityResourceProperties");
-                });
-
-            modelBuilder.Entity("OpenGate.Admin.EntityFramework.Shared.Entities.ClientManager", b =>
-                {
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
-
-                    b.HasKey("ClientId", "UserId");
-
-                    b.ToTable("ClientManagers");
+                    b.ToTable("IdentityProperties");
                 });
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.ApiResourceClaim", b =>
@@ -735,15 +805,6 @@ namespace OpenGate.Admin.EntityFramework.MySql.Migrations.IdentityServerConfigur
                     b.HasOne("IdentityServer4.EntityFramework.Entities.IdentityResource", "IdentityResource")
                         .WithMany("Properties")
                         .HasForeignKey("IdentityResourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("OpenGate.Admin.EntityFramework.Shared.Entities.ClientManager", b =>
-                {
-                    b.HasOne("IdentityServer4.EntityFramework.Entities.Client", "Client")
-                        .WithMany()
-                        .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

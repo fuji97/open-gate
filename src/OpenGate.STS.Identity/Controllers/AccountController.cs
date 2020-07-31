@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 // Original file: https://github.com/IdentityServer/IdentityServer4.Samples
-// Modified by Jan Škoruba
+// Modified by Jan ï¿½koruba
 
 using System;
 using System.Linq;
@@ -367,11 +367,28 @@ namespace OpenGate.STS.Identity.Controllers
             {
                 return View("Lockout");
             }
+            
+            // If an user with the same email exists, then link this login to that identity.
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (email != null) {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null) {
+                    var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+
+                        return RedirectToLocal(returnUrl);
+                    }
+                    
+                    AddErrors(addLoginResult);
+                }
+            }
 
             // If the user does not have an account, then ask the user to create an account.
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["LoginProvider"] = info.LoginProvider;
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            
 
             return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = email });
         }
