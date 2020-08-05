@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OpenGate.Admin.Configuration.Constants;
 using OpenGate.Admin.ExceptionHandling;
+using OpenGate.Admin.Helpers;
 
 namespace OpenGate.Admin.Controllers
 {
@@ -26,8 +27,7 @@ namespace OpenGate.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var isAdmin = await _authorization.AuthorizeAsync(User, AuthorizationConsts.AdministrationPolicy);
-            ViewBag.IsAdmin = isAdmin.Succeeded;
+            ViewBag.IsAdmin = await _authorization.IsAdmin(User);
             return View();
         }
 

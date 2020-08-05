@@ -364,6 +364,9 @@ namespace OpenGate.STS.Identity.Helpers
             {
                 options.AddPolicy(AuthorizationConsts.AdministrationPolicy,
                     policy => policy.RequireRole(rootConfiguration.AdminConfiguration.AdministrationRole));
+                options.AddPolicy(AuthorizationConsts.ClientManagerPolicy,
+                    policy => policy.RequireRole(rootConfiguration.AdminConfiguration.AdministrationRole,
+                        rootConfiguration.AdminConfiguration.ClientManagerRole));
             });
         }
 

@@ -15,6 +15,7 @@ using OpenGate.Admin.EntityFramework.Shared.Entities.Identity;
 using OpenGate.Admin.Helpers;
 using OpenGate.Admin.Configuration;
 using OpenGate.Admin.Configuration.Constants;
+using OpenGate.Admin.Services;
 
 namespace OpenGate.Admin
 {
@@ -69,6 +70,9 @@ namespace OpenGate.Admin
 
             // Add authorization policies for MVC
             RegisterAuthorization(services);
+            
+            // Add Client Manager
+            services.AddScoped<IClientManagerService, ClientManagerService>();
 
             // Add audit logging
             services.AddAuditEventLogging<AdminAuditLogDbContext, AuditLog>(Configuration);

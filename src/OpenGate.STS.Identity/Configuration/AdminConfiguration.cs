@@ -7,6 +7,8 @@ namespace OpenGate.STS.Identity.Configuration
         public string FaviconUri { get; set; }
         public string IdentityAdminBaseUrl { get; set; }
         public string AdministrationRole { get; set; }
+        
+        public string ClientManagerRole { get; set; }
     }
 }
 

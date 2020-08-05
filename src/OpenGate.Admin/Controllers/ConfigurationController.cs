@@ -1,17 +1,28 @@
+using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
+using IdentityServer4.EntityFramework.Entities;
+using IdentityServer4.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Dtos.Configuration;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Helpers;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Services.Interfaces;
 using OpenGate.Admin.Configuration.Constants;
+using OpenGate.Admin.EntityFramework.Shared.DbContexts;
 using OpenGate.Admin.ExceptionHandling;
+using OpenGate.Admin.Helpers;
+using OpenGate.Admin.Services;
+using Skoruba.IdentityServer4.Admin.EntityFramework.Extensions.Common;
+using Skoruba.IdentityServer4.Admin.BusinessLogic.Mappers;
 
 namespace OpenGate.Admin.Controllers
 {
-    [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
+    [Authorize(Policy = AuthorizationConsts.ClientManagerPolicy)]
     [TypeFilter(typeof(ControllerExceptionFilterAttribute))]
     public class ConfigurationController : BaseController
     {
@@ -19,22 +30,30 @@ namespace OpenGate.Admin.Controllers
         private readonly IApiResourceService _apiResourceService;
         private readonly IClientService _clientService;
         private readonly IStringLocalizer<ConfigurationController> _localizer;
+        private readonly IAuthorizationService _authorization;
+        private readonly IClientManagerService _clientManagerService;
+        private readonly IdentityServerConfigurationDbContext _dbContext;
 
         public ConfigurationController(IIdentityResourceService identityResourceService,
             IApiResourceService apiResourceService,
             IClientService clientService,
             IStringLocalizer<ConfigurationController> localizer,
-            ILogger<ConfigurationController> logger)
+            ILogger<ConfigurationController> logger,
+            IAuthorizationService authorizationService,
+            IClientManagerService clientManagerService,
+            IdentityServerConfigurationDbContext dbContext)
             : base(logger)
         {
             _identityResourceService = identityResourceService;
             _apiResourceService = apiResourceService;
             _clientService = clientService;
             _localizer = localizer;
+            _authorization = authorizationService;
+            _clientManagerService = clientManagerService;
+            _dbContext = dbContext;
         }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationConsts.ClientManagerPolicy)]
         [Route("[controller]/[action]")]
         [Route("[controller]/[action]/{id:int}")]
         public async Task<IActionResult> Client(int id)
@@ -46,7 +65,18 @@ namespace OpenGate.Admin.Controllers
             }
 
             var client = await _clientService.GetClientAsync((int)id);
-            client = _clientService.BuildClientViewModel(client);
+
+            if (await _authorization.IsAdmin(User)) {
+                client = _clientService.BuildClientViewModel(client);
+            }
+            else {
+                if (await _clientManagerService.IsClientManagerAsync(client.Id, User.GetSubjectId())) {
+                    client = _clientService.BuildClientViewModel(client);
+                }
+                else {
+                    client = _clientService.BuildClientViewModel();
+                }
+            }
 
             return View(client);
         }
@@ -56,6 +86,7 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> Client(ClientDto client)
         {
             client = _clientService.BuildClientViewModel(client);
+            var isAdmin = await _authorization.IsAdmin(User);
 
             if (!ModelState.IsValid)
             {
@@ -66,14 +97,20 @@ namespace OpenGate.Admin.Controllers
             if (client.Id == 0)
             {
                 var clientId = await _clientService.AddClientAsync(client);
+                await _clientManagerService.AddClientManagerAsync(clientId, User.GetSubjectId());
                 SuccessNotification(string.Format(_localizer["SuccessAddClient"], client.ClientId), _localizer["SuccessTitle"]);
 
                 return RedirectToAction(nameof(Client), new { Id = clientId });
             }
 
             //Update client
-            await _clientService.UpdateClientAsync(client);
-            SuccessNotification(string.Format(_localizer["SuccessUpdateClient"], client.ClientId), _localizer["SuccessTitle"]);
+            if (!isAdmin && !(await _clientManagerService.IsClientManagerAsync(client.Id, User.GetSubjectId()))) {
+                UnauthorizedNotification();
+            }
+            else {
+                await _clientService.UpdateClientAsync(client);
+                SuccessNotification(string.Format(_localizer["SuccessUpdateClient"], client.ClientId), _localizer["SuccessTitle"]);
+            }
 
             return RedirectToAction(nameof(Client), new { client.Id });
         }
@@ -82,6 +119,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientClone(int id)
         {
             if (id == 0) return NotFound();
+
+            if (!await IsUserManagerOrAdmin(id)) {
+                return NotFound();
+            }
 
             var clientDto = await _clientService.GetClientAsync(id);
             var client = _clientService.BuildClientCloneViewModel(id, clientDto);
@@ -99,6 +140,7 @@ namespace OpenGate.Admin.Controllers
             }
 
             var newClientId = await _clientService.CloneClientAsync(client);
+            await _clientManagerService.AddClientManagerAsync(newClientId, User.GetSubjectId());
             SuccessNotification(string.Format(_localizer["SuccessClientClone"], client.ClientId), _localizer["SuccessTitle"]);
 
             return RedirectToAction(nameof(Client), new { Id = newClientId });
@@ -108,6 +150,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientDelete(int id)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) {
+                return NotFound();
+            }
 
             var client = await _clientService.GetClientAsync(id);
 
@@ -118,6 +164,11 @@ namespace OpenGate.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClientDelete(ClientDto client)
         {
+            if (!await IsUserManagerOrAdmin(client.Id)) {
+                return NotFound();
+            }
+            
+            await _clientManagerService.RemoveClientManagerAsync(client.Id, User.GetSubjectId());
             await _clientService.RemoveClientAsync(client);
 
             SuccessNotification(_localizer["SuccessClientDelete"], _localizer["SuccessTitle"]);
@@ -129,6 +180,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientClaims(int id, int? page)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) {
+                return NotFound();
+            }
 
             var claims = await _clientService.GetClientClaimsAsync(id, page ?? 1);
 
@@ -139,6 +194,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientProperties(int id, int? page)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) {
+                return NotFound();
+            }
 
             var properties = await _clientService.GetClientPropertiesAsync(id, page ?? 1);
 
@@ -146,6 +205,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourceProperties(int id, int? page)
         {
             if (id == 0) return NotFound();
@@ -157,6 +217,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourceProperties(ApiResourcePropertiesDto apiResourceProperty)
         {
             if (!ModelState.IsValid)
@@ -171,6 +232,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourceProperties(int id, int? page)
         {
             if (id == 0) return NotFound();
@@ -182,6 +244,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourceProperties(IdentityResourcePropertiesDto identityResourceProperty)
         {
             if (!ModelState.IsValid)
@@ -203,6 +266,10 @@ namespace OpenGate.Admin.Controllers
             {
                 return View(clientProperty);
             }
+            
+            if (!await IsUserManagerOrAdmin(clientProperty.ClientId)) {
+                return View(clientProperty);
+            }
 
             await _clientService.AddClientPropertyAsync(clientProperty);
             SuccessNotification(string.Format(_localizer["SuccessAddClientProperty"], clientProperty.ClientId, clientProperty.ClientName), _localizer["SuccessTitle"]);
@@ -218,6 +285,10 @@ namespace OpenGate.Admin.Controllers
             {
                 return View(clientClaim);
             }
+            
+            if (!await IsUserManagerOrAdmin(clientClaim.ClientId)) {
+                return View(clientClaim);
+            }
 
             await _clientService.AddClientClaimAsync(clientClaim);
             SuccessNotification(string.Format(_localizer["SuccessAddClientClaim"], clientClaim.Value, clientClaim.ClientName), _localizer["SuccessTitle"]);
@@ -229,6 +300,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientClaimDelete(int id)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) {
+                return View(id);
+            }
 
             var clientClaim = await _clientService.GetClientClaimAsync(id);
 
@@ -239,6 +314,10 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientPropertyDelete(int id)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) {
+                return View(id);
+            }
 
             var clientProperty = await _clientService.GetClientPropertyAsync(id);
 
@@ -246,6 +325,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourcePropertyDelete(int id)
         {
             if (id == 0) return NotFound();
@@ -256,6 +336,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourcePropertyDelete(int id)
         {
             if (id == 0) return NotFound();
@@ -268,8 +349,13 @@ namespace OpenGate.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> ClientClaimDelete(ClientClaimsDto clientClaim)
         {
-            await _clientService.DeleteClientClaimAsync(clientClaim);
-            SuccessNotification(_localizer["SuccessDeleteClientClaim"], _localizer["SuccessTitle"]);
+            if (await IsUserManagerOrAdmin(clientClaim.ClientId)) {
+                await _clientService.DeleteClientClaimAsync(clientClaim);
+                SuccessNotification(_localizer["SuccessDeleteClientClaim"], _localizer["SuccessTitle"]);
+            }
+            else {
+                UnauthorizedNotification();
+            }
 
             return RedirectToAction(nameof(ClientClaims), new { Id = clientClaim.ClientId });
         }
@@ -278,14 +364,20 @@ namespace OpenGate.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClientPropertyDelete(ClientPropertiesDto clientProperty)
         {
-            await _clientService.DeleteClientPropertyAsync(clientProperty);
-            SuccessNotification(_localizer["SuccessDeleteClientProperty"], _localizer["SuccessTitle"]);
+            if (await IsUserManagerOrAdmin(clientProperty.ClientId)) {
+                await _clientService.DeleteClientPropertyAsync(clientProperty);
+                SuccessNotification(_localizer["SuccessDeleteClientProperty"], _localizer["SuccessTitle"]);
+            }
+            else {
+                UnauthorizedNotification();
+            }
 
             return RedirectToAction(nameof(ClientProperties), new { Id = clientProperty.ClientId });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourcePropertyDelete(ApiResourcePropertiesDto apiResourceProperty)
         {
             await _apiResourceService.DeleteApiResourcePropertyAsync(apiResourceProperty);
@@ -296,6 +388,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourcePropertyDelete(IdentityResourcePropertiesDto identityResourceProperty)
         {
             await _identityResourceService.DeleteIdentityResourcePropertyAsync(identityResourceProperty);
@@ -309,6 +402,8 @@ namespace OpenGate.Admin.Controllers
         {
             if (id == 0) return NotFound();
 
+            if (!await IsUserManagerOrAdmin(id)) return NotFound();
+
             var clientSecrets = await _clientService.GetClientSecretsAsync(id, page ?? 1);
             _clientService.BuildClientSecretsViewModel(clientSecrets);
 
@@ -319,8 +414,14 @@ namespace OpenGate.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClientSecrets(ClientSecretsDto clientSecret)
         {
-            await _clientService.AddClientSecretAsync(clientSecret);
-            SuccessNotification(string.Format(_localizer["SuccessAddClientSecret"], clientSecret.ClientName), _localizer["SuccessTitle"]);
+            if (await IsUserManagerOrAdmin(clientSecret.ClientId)) {
+                await _clientService.AddClientSecretAsync(clientSecret);
+                SuccessNotification(string.Format(_localizer["SuccessAddClientSecret"], clientSecret.ClientName),
+                    _localizer["SuccessTitle"]);
+            }
+            else {
+                UnauthorizedNotification();
+            }
 
             return RedirectToAction(nameof(ClientSecrets), new { Id = clientSecret.ClientId });
         }
@@ -329,6 +430,8 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> ClientSecretDelete(int id)
         {
             if (id == 0) return NotFound();
+            
+            if (!await IsUserManagerOrAdmin(id)) return NotFound();
 
             var clientSecret = await _clientService.GetClientSecretAsync(id);
 
@@ -339,11 +442,17 @@ namespace OpenGate.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ClientSecretDelete(ClientSecretsDto clientSecret)
         {
-            await _clientService.DeleteClientSecretAsync(clientSecret);
-            SuccessNotification(_localizer["SuccessDeleteClientSecret"], _localizer["SuccessTitle"]);
+            if (await IsUserManagerOrAdmin(clientSecret.ClientId)) {
+                await _clientService.DeleteClientSecretAsync(clientSecret);
+                SuccessNotification(_localizer["SuccessDeleteClientSecret"], _localizer["SuccessTitle"]);
+            } else {
+                UnauthorizedNotification();
+            }
 
             return RedirectToAction(nameof(ClientSecrets), new { Id = clientSecret.ClientId });
         }
+
+        
 
         [HttpGet]
         public async Task<IActionResult> SearchScopes(string scope, int limit = 0)
@@ -373,10 +482,30 @@ namespace OpenGate.Admin.Controllers
         public async Task<IActionResult> Clients(int? page, string search)
         {
             ViewBag.Search = search;
-            return View(await _clientService.GetClientsAsync(search, page ?? 1));
+            ClientsDto clients = await _clientService.GetClientsAsync(search, page ?? 1);
+            if (!await _authorization.IsAdmin(User)) {
+                var managedClients = await _clientManagerService.ClientManagedAsync(User.GetSubjectId());
+                // TODO Extractred the original query code from the repository, not a good idea
+                var pagedList = new PagedList<Client>();
+
+                Expression<Func<Client, bool>> searchCondition = x => x.ClientId.Contains(search) || x.ClientName.Contains(search);
+                var listClients = await _dbContext.Clients.Where(c => managedClients.Contains(c.Id))
+                    .WhereIf(!string.IsNullOrEmpty(search), searchCondition)
+                    .PageBy(x => x.Id, page ?? 1, 10).ToListAsync();
+                pagedList.Data.AddRange(listClients);
+                pagedList.TotalCount = await _dbContext.Clients.WhereIf(!string.IsNullOrEmpty(search), searchCondition).CountAsync();
+                pagedList.PageSize = 10;
+
+                clients = pagedList.ToModel();
+                
+                // TODO Missing Audit event
+                //await AuditEventLogger.LogEventAsync(new ClientsRequestedEvent(clientsDto));
+            }
+            return View(clients);
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourceDelete(int id)
         {
             if (id == 0) return NotFound();
@@ -388,6 +517,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResourceDelete(IdentityResourceDto identityResource)
         {
             await _identityResourceService.DeleteIdentityResourceAsync(identityResource);
@@ -398,6 +528,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResource(IdentityResourceDto identityResource)
         {
             if (!ModelState.IsValid)
@@ -426,6 +557,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResource(ApiResourceDto apiResource)
         {
             if (!ModelState.IsValid)
@@ -453,6 +585,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourceDelete(int id)
         {
             if (id == 0) return NotFound();
@@ -464,6 +597,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResourceDelete(ApiResourceDto apiResource)
         {
             await _apiResourceService.DeleteApiResourceAsync(apiResource);
@@ -475,6 +609,7 @@ namespace OpenGate.Admin.Controllers
         [HttpGet]
         [Route("[controller]/[action]")]
         [Route("[controller]/[action]/{id:int}")]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResource(int id)
         {
             if (id == 0)
@@ -489,6 +624,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiSecrets(int id, int? page)
         {
             if (id == 0) return NotFound();
@@ -501,6 +637,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiSecrets(ApiSecretsDto apiSecret)
         {
             if (!ModelState.IsValid)
@@ -515,6 +652,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiScopes(int id, int? page, int? scope)
         {
             if (id == 0 || !ModelState.IsValid) return NotFound();
@@ -534,6 +672,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiScopes(ApiScopesDto apiScope)
         {
             if (!ModelState.IsValid)
@@ -561,6 +700,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiScopeDelete(int id, int scope)
         {
             if (id == 0 || scope == 0) return NotFound();
@@ -572,6 +712,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiScopeDelete(ApiScopesDto apiScope)
         {
             await _apiResourceService.DeleteApiScopeAsync(apiScope);
@@ -581,6 +722,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiResources(int? page, string search)
         {
             ViewBag.Search = search;
@@ -590,6 +732,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResources(int? page, string search)
         {
             ViewBag.Search = search;
@@ -599,6 +742,7 @@ namespace OpenGate.Admin.Controllers
         }
 
         [HttpGet]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiSecretDelete(int id)
         {
             if (id == 0) return NotFound();
@@ -610,6 +754,7 @@ namespace OpenGate.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> ApiSecretDelete(ApiSecretsDto apiSecret)
         {
             await _apiResourceService.DeleteApiSecretAsync(apiSecret);
@@ -621,6 +766,7 @@ namespace OpenGate.Admin.Controllers
         [HttpGet]
         [Route("[controller]/[action]")]
         [Route("[controller]/[action]/{id:int}")]
+        [Authorize(Policy = AuthorizationConsts.AdministrationPolicy)]
         public async Task<IActionResult> IdentityResource(int id)
         {
             if (id == 0)
@@ -632,6 +778,16 @@ namespace OpenGate.Admin.Controllers
             var identityResource = await _identityResourceService.GetIdentityResourceAsync(id);
 
             return View(identityResource);
+        }
+
+        private async Task<bool> IsUserManagerOrAdmin(int clientId) {
+            return await _authorization.IsAdmin(User) ||
+                   await _clientManagerService.IsClientManagerAsync(clientId, User.GetSubjectId());
+        }
+        
+        private void UnauthorizedNotification() {
+            // TODO Localize
+            CreateNotification(NotificationHelpers.AlertType.Error, "Can't edit this client", "Unauthorized");
         }
     }
 }
