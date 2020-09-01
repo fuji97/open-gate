@@ -18,6 +18,7 @@ using OpenGate.Admin.Api.Resources;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Identity.Dtos.Identity;
 using OpenGate.Admin.EntityFramework.Shared.DbContexts;
 using OpenGate.Admin.EntityFramework.Shared.Entities.Identity;
+using OpenGate.Admin.EntityFramework.Shared.Services;
 
 namespace OpenGate.Admin.Api
 {
@@ -43,6 +44,7 @@ namespace OpenGate.Admin.Api
 
             services.AddScoped<ControllerExceptionFilterAttribute>();
             services.AddScoped<IApiErrorResources, ApiErrorResources>();
+            services.AddScoped<IClientManagerService, ClientManagerService>();
 
             // Add authentication services
             RegisterAuthentication(services);

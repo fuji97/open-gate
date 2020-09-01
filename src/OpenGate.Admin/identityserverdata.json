@@ -117,7 +117,8 @@
           "implicit"
         ],
         "RedirectUris": [
-          "http://localhost:5001/swagger/oauth2-redirect.html"
+          "http://localhost:8001/swagger/oauth2-redirect.html",
+          "https://localhost:8000/swagger/oauth2-redirect.html"
         ],
         "AllowedScopes": [
           "DefaultClient_api"

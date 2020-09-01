@@ -245,6 +245,14 @@ namespace OpenGate.Admin.Api.Helpers
                                 (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.AdministrationRole)
                             )
                         ));
+                options.AddPolicy(AuthorizationConsts.ClientManagerPolicy,
+                    policy =>  policy.RequireAssertion(context => context.User.HasClaim(c =>
+                            (c.Type == JwtClaimTypes.Role && c.Value == adminApiConfiguration.AdministrationRole) ||
+                            (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.AdministrationRole) ||
+                            (c.Type == JwtClaimTypes.Role && c.Value == adminApiConfiguration.ClientManagerRole) ||
+                            (c.Type == $"client_{JwtClaimTypes.Role}" && c.Value == adminApiConfiguration.ClientManagerRole) 
+                        )
+                    ));
             });
         }
 

@@ -13,8 +13,13 @@
 
     <ItemGroup>
       <PackageReference Include="Skoruba.AuditLogging.EntityFramework" Version="1.0.0-beta7" />
+      <PackageReference Include="Skoruba.IdentityServer4.Admin.BusinessLogic" Version="1.0.0-rc1" />
       <PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework" Version="1.0.0-rc1" />
       <PackageReference Include="Skoruba.IdentityServer4.Admin.EntityFramework.Identity" Version="1.0.0-rc1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Extensions" />
     </ItemGroup>
 </Project>
 

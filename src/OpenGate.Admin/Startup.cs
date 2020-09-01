@@ -15,7 +15,7 @@ using OpenGate.Admin.EntityFramework.Shared.Entities.Identity;
 using OpenGate.Admin.Helpers;
 using OpenGate.Admin.Configuration;
 using OpenGate.Admin.Configuration.Constants;
-using OpenGate.Admin.Services;
+using OpenGate.Admin.EntityFramework.Shared.Services;
 
 namespace OpenGate.Admin
 {
@@ -72,6 +72,7 @@ namespace OpenGate.Admin
             RegisterAuthorization(services);
             
             // Add Client Manager
+            //services.AddScoped<AuditEventLogger>();
             services.AddScoped<IClientManagerService, ClientManagerService>();
 
             // Add audit logging

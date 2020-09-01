@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Skoruba.IdentityServer4.Admin.BusinessLogic.Dtos.Configuration;
 
-namespace OpenGate.Admin.Services {
+namespace OpenGate.Admin.EntityFramework.Shared.Services {
     public interface IClientManagerService {
         Task<IList<string>> ClientManagersAsync(int clientId);
         
@@ -12,5 +13,7 @@ namespace OpenGate.Admin.Services {
         Task<bool> AddClientManagerAsync(int clientId, string userId);
         
         Task<bool> RemoveClientManagerAsync(int clientId, string userId);
+
+        Task<ClientsDto> GetManagedClients(string userId, string searchText, int page, int pageSize);
     }
 }

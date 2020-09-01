@@ -3,6 +3,9 @@
     "Roles": [
       {
         "Name": "Admin"
+      },
+      {
+        "Name": "ClientManager"
       }
     ],
     "Users": [

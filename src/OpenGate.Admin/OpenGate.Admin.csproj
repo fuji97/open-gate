@@ -125,6 +125,10 @@
         <ProjectReference Include="..\OpenGate.Admin.EntityFramework.SqlServer\OpenGate.Admin.EntityFramework.SqlServer.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Services" />
+    </ItemGroup>
+
 </Project>
 
 

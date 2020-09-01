@@ -14,9 +14,9 @@ using Skoruba.IdentityServer4.Admin.BusinessLogic.Helpers;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Services.Interfaces;
 using OpenGate.Admin.Configuration.Constants;
 using OpenGate.Admin.EntityFramework.Shared.DbContexts;
+using OpenGate.Admin.EntityFramework.Shared.Services;
 using OpenGate.Admin.ExceptionHandling;
 using OpenGate.Admin.Helpers;
-using OpenGate.Admin.Services;
 using Skoruba.IdentityServer4.Admin.EntityFramework.Extensions.Common;
 using Skoruba.IdentityServer4.Admin.BusinessLogic.Mappers;
 
@@ -484,22 +484,7 @@ namespace OpenGate.Admin.Controllers
             ViewBag.Search = search;
             ClientsDto clients = await _clientService.GetClientsAsync(search, page ?? 1);
             if (!await _authorization.IsAdmin(User)) {
-                var managedClients = await _clientManagerService.ClientManagedAsync(User.GetSubjectId());
-                // TODO Extractred the original query code from the repository, not a good idea
-                var pagedList = new PagedList<Client>();
-
-                Expression<Func<Client, bool>> searchCondition = x => x.ClientId.Contains(search) || x.ClientName.Contains(search);
-                var listClients = await _dbContext.Clients.Where(c => managedClients.Contains(c.Id))
-                    .WhereIf(!string.IsNullOrEmpty(search), searchCondition)
-                    .PageBy(x => x.Id, page ?? 1, 10).ToListAsync();
-                pagedList.Data.AddRange(listClients);
-                pagedList.TotalCount = await _dbContext.Clients.WhereIf(!string.IsNullOrEmpty(search), searchCondition).CountAsync();
-                pagedList.PageSize = 10;
-
-                clients = pagedList.ToModel();
-                
-                // TODO Missing Audit event
-                //await AuditEventLogger.LogEventAsync(new ClientsRequestedEvent(clientsDto));
+                clients = await _clientManagerService.GetManagedClients(User.GetSubjectId(), search, page ?? 1, 10);
             }
             return View(clients);
         }

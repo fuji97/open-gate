@@ -17,6 +17,8 @@ namespace OpenGate.Admin.Api.Configuration
         public string OidcApiName { get; set; }
 
         public string AdministrationRole { get; set; }
+        
+        public string ClientManagerRole { get; set; }
 
         public bool CorsAllowAnyOrigin { get; set; }
 
