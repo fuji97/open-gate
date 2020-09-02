@@ -186,4 +186,10 @@
   <data name="SuccessUpdateClient" xml:space="preserve">
     <value>Client {0} is successfully updated!</value>
   </data>
+  <data name="UnauthorizedNotification" xml:space="preserve">
+    <value>Can't edit this client</value>
+  </data>
+  <data name="UnauthorizedClientTitle" xml:space="preserve">
+    <value>Unauthorized</value>
+  </data>
 </root>

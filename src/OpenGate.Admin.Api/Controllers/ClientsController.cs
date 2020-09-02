@@ -187,12 +187,13 @@ namespace OpenGate.Admin.Api.Controllers
         }
 
         [HttpDelete("Secrets/{secretId}")]
-        public async Task<IActionResult> DeleteSecret(int secretId)
-        {
-            // TODO Find a way to check if the user have permissions to access the secret
+        public async Task<IActionResult> DeleteSecret(int secretId) {
             var clientSecret = new ClientSecretsDto { ClientSecretId = secretId };
 
             await _clientService.GetClientSecretAsync(clientSecret.ClientSecretId);
+
+            await NotFoundIfNotAdmin(clientSecret.ClientId);
+            
             await _clientService.DeleteClientSecretAsync(clientSecret);
 
             return Ok();
@@ -246,10 +247,12 @@ namespace OpenGate.Admin.Api.Controllers
         [HttpDelete("Properties/{propertyId}")]
         public async Task<IActionResult> DeleteProperty(int propertyId)
         {
-            // TODO Find a way to check if the user have permissions to access the property
             var clientProperty = new ClientPropertiesDto { ClientPropertyId = propertyId };
 
             await _clientService.GetClientPropertyAsync(clientProperty.ClientPropertyId);
+            
+            await NotFoundIfNotAdmin(clientProperty.ClientId);
+            
             await _clientService.DeleteClientPropertyAsync(clientProperty);
 
             return Ok();
@@ -303,29 +306,15 @@ namespace OpenGate.Admin.Api.Controllers
         [HttpDelete("Claims/{claimId}")]
         public async Task<IActionResult> DeleteClaim(int claimId)
         {
-            // TODO Find a way to check if the user have permissions to access the claim
             var clientClaimsDto = new ClientClaimsDto { ClientClaimId = claimId };
 
             await _clientService.GetClientClaimAsync(claimId);
+            
+            await NotFoundIfNotAdmin(clientClaimsDto.ClientId);
+            
             await _clientService.DeleteClientClaimAsync(clientClaimsDto);
 
             return Ok();
-        }
-
-        private async Task<PagedList<Client>> GetManagedClients(string searchText, int page, int pageSize, IList<int> managedClients) {
-            var pagedList = new PagedList<Client>();
-            // TODO Extractred the original query code from the repository, not a good idea
-
-            Expression<Func<Client, bool>> searchCondition =
-                x => x.ClientId.Contains(searchText) || x.ClientName.Contains(searchText);
-            var listClients = await _dbContext.Clients.Where(c => managedClients.Contains(c.Id))
-                .WhereIf(!string.IsNullOrEmpty(searchText), searchCondition)
-                .PageBy(x => x.Id, page, pageSize).ToListAsync();
-            pagedList.Data.AddRange(listClients);
-            pagedList.TotalCount =
-                await _dbContext.Clients.WhereIf(!string.IsNullOrEmpty(searchText), searchCondition).CountAsync();
-            pagedList.PageSize = pageSize;
-            return pagedList;
         }
 
         private async Task<bool> IsUserManagerOrAdmin(int clientId) {
@@ -335,7 +324,6 @@ namespace OpenGate.Admin.Api.Controllers
 
         private async Task NotFoundIfNotAdmin(int id) {
             if (!await IsUserManagerOrAdmin(id)) {
-                // TODO To test, it's ok to return null?
                 throw new UserFriendlyErrorPageException(
                     string.Format(_clientServiceResources.ClientDoesNotExist().Description, (object) id));
             }

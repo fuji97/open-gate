@@ -4,22 +4,23 @@ services:
   opengate.admin:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - "80"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - "AdminConfiguration__IdentityAdminBaseUrl=https://admin.opengate.fuji.siderealworks.it"
+      - "AdminConfiguration__IdentityAdminRedirectUri=https://admin.opengate.fuji.siderealworks.it/signin-oidc"
+      - "AdminConfiguration__IdentityServerBaseUrl=https://server.opengate.fuji.siderealworks.it"
+      - "AdminConfiguration__RequireHttpsMetadata=false"
+      - "IdentityServerData__Clients__0__ClientUri=https://admin.opengate.fuji.siderealworks.it"
+      - "IdentityServerData__Clients__0__RedirectUris__0=https://admin.opengate.fuji.siderealworks.it/signin-oidc"
+      - "IdentityServerData__Clients__0__FrontChannelLogoutUri=https://admin.opengate.fuji.siderealworks.it/signin-oidc"
+      - "IdentityServerData__Clients__0__PostLogoutRedirectUris__0=https://admin.opengate.fuji.siderealworks.it/signout-callback-oidc"
+      - "IdentityServerData__Clients__0__AllowedCorsOrigins__0=https://admin.opengate.fuji.siderealworks.it"
+      - "IdentityServerData__Clients__1__RedirectUris__0=https://api.opengate.fuji.siderealworks.it/swagger/oauth2-redirect.html"
   opengate.admin.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - "80"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - "AdminApiConfiguration__ApiBaseUrl=https://api.opengate.fuji.siderealworks.it"
+      - "AdminApiConfiguration__IdentityServerBaseUrl=https://server.opengate.fuji.siderealworks.it"
 
   opengate.sts.identity:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - "80"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - "AdminConfiguration__IdentityAdminBaseUrl=https://admin.opengate.fuji.siderealworks.it"

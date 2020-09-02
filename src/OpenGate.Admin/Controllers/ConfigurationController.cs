@@ -771,8 +771,7 @@ namespace OpenGate.Admin.Controllers
         }
         
         private void UnauthorizedNotification() {
-            // TODO Localize
-            CreateNotification(NotificationHelpers.AlertType.Error, "Can't edit this client", "Unauthorized");
+            CreateNotification(NotificationHelpers.AlertType.Error, _localizer["UnauthorizedClient"], _localizer["UnauthorizedClientTitle"]);
         }
     }
 }

@@ -186,4 +186,7 @@
   <data name="SuccessUpdateClient" xml:space="preserve">
     <value>Sovelluksen {0} päivitys onnistui!</value>
   </data>
+  <data name="UnauthorizedNotification" xml:space="preserve">
+    <value />
+  </data>
 </root>

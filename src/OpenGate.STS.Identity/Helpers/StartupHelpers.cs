@@ -52,6 +52,7 @@ namespace OpenGate.STS.Identity.Helpers
                     LanguageViewLocationExpanderFormat.Suffix,
                     opts => { opts.ResourcesPath = ConfigurationConsts.ResourcesPath; })
                 .AddDataAnnotationsLocalization()
+                .AddRazorRuntimeCompilation()
                 .ConfigureApplicationPartManager(m =>
                 {
                     m.FeatureProviders.Add(new GenericTypeControllerFeatureProvider<TUser, TKey>());

@@ -277,6 +277,7 @@ namespace OpenGate.Admin.Helpers
                     LanguageViewLocationExpanderFormat.Suffix,
                     opts => { opts.ResourcesPath = ConfigurationConsts.ResourcesPath; })
                 .AddDataAnnotationsLocalization()
+                .AddRazorRuntimeCompilation()
                 .ConfigureApplicationPartManager(m =>
                 {
                     m.FeatureProviders.Add(new GenericTypeControllerFeatureProvider<TUserDto, TUserDtoKey, TRoleDto, TRoleDtoKey, TUserKey, TRoleKey, TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken,

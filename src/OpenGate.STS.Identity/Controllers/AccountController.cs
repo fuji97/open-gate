@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using OpenGate.STS.Identity.Configuration;
+using OpenGate.STS.Identity.Configuration.Interfaces;
 using OpenGate.STS.Identity.Helpers;
 using OpenGate.STS.Identity.Helpers.Localization;
 using OpenGate.STS.Identity.ViewModels.Account;
@@ -45,6 +46,7 @@ namespace OpenGate.STS.Identity.Controllers
         private readonly IGenericControllerLocalizer<AccountController<TUser, TKey>> _localizer;
         private readonly LoginConfiguration _loginConfiguration;
         private readonly RegisterConfiguration _registerConfiguration;
+        private readonly IRootConfiguration _rootConfiguration;
 
         public AccountController(
             UserResolver<TUser> userResolver,
@@ -57,7 +59,8 @@ namespace OpenGate.STS.Identity.Controllers
             IEmailSender emailSender,
             IGenericControllerLocalizer<AccountController<TUser, TKey>> localizer,
             LoginConfiguration loginConfiguration,
-            RegisterConfiguration registerConfiguration)
+            RegisterConfiguration registerConfiguration,
+            IRootConfiguration rootConfiguration)
         {
             _userResolver = userResolver;
             _userManager = userManager;
@@ -70,6 +73,7 @@ namespace OpenGate.STS.Identity.Controllers
             _localizer = localizer;
             _loginConfiguration = loginConfiguration;
             _registerConfiguration = registerConfiguration;
+            _rootConfiguration = rootConfiguration;
         }
 
         /// <summary>
@@ -430,6 +434,10 @@ namespace OpenGate.STS.Identity.Controllers
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    if (_registerConfiguration.AllNewUsersClientManager) {
+                        await _userManager.AddToRoleAsync(user, _rootConfiguration.AdminConfiguration.ClientManagerRole);
+                    }
+                    
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
@@ -593,9 +601,15 @@ namespace OpenGate.STS.Identity.Controllers
                 Email = model.Email
             };
 
+            
+
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
+                if (_registerConfiguration.AllNewUsersClientManager) {
+                    await _userManager.AddToRoleAsync(user, _rootConfiguration.AdminConfiguration.ClientManagerRole);
+                }
+                
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                 var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code }, HttpContext.Request.Scheme);
 
