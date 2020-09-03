@@ -27,6 +27,7 @@ services:
       - "IdentityServerData__Clients__0__AllowedCorsOrigins__0=http://127.0.0.1.xip.io:9000"
       - "IdentityServerData__Clients__1__RedirectUris__0=http://127.0.0.1.xip.io:5000/swagger/oauth2-redirect.html"
       - "Serilog__WriteTo__1__Args__connectionString=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
+      - "DatabaseProviderConfiguration__ProviderType=SqlServer"
     command: dotnet OpenGate.Admin.dll /seed
     depends_on:
       - db
@@ -52,6 +53,7 @@ services:
       - "ConnectionStrings__IdentityDbConnection=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
       - "ConnectionStrings__AdminLogDbConnection=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
       - "ConnectionStrings__AdminAuditLogDbConnection=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
+      - "DatabaseProviderConfiguration__ProviderType=SqlServer"
     container_name: skoruba-identityserver4-admin-api
     volumes:
       - "./shared/serilog.json:/app/serilog.json"
@@ -70,6 +72,7 @@ services:
       - "ConnectionStrings__PersistedGrantDbConnection=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
       - "ConnectionStrings__IdentityDbConnection=Server=db;Database=IdentityServer4Admin;User Id=sa;Password=${DB_PASSWORD:-Password_123};MultipleActiveResultSets=true"
       - "AdminConfiguration__IdentityAdminBaseUrl=http://127.0.0.1.xip.io:9000"
+      - "DatabaseProviderConfiguration__ProviderType=SqlServer"
     depends_on:
       - db
     volumes:
