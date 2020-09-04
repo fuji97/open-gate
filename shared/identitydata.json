@@ -1,17 +1,21 @@
-﻿{
+{
   "IdentityData": {
     "Roles": [
       {
         "Name": "Admin"
+      },
+      {
+        "Name": "ClientManager"
       }
     ],
     "Users": [
       {
         "Username": "admin",
-        "Password": "PaF:\Git\C#\open-gate\word123",
+        "Password": "Pa$$word123",
         "Email": "admin@opengate.com",
         "Roles": [
-          "Admin"
+          "Admin",
+          "ClientManager"
         ],
         "Claims": [
           {
