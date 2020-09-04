@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Logging;
 using OpenGate.Admin.EntityFramework.Shared.DbContexts;
 using OpenGate.Admin.EntityFramework.Shared.Entities.Identity;
 using OpenGate.STS.Identity.Configuration;
@@ -48,6 +49,10 @@ namespace OpenGate.STS.Identity
             RegisterAuthorization(services);
 
             services.AddIdSHealthChecks<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminIdentityDbContext>(Configuration);
+            
+            if (Environment.IsDevelopment()) {
+                IdentityModelEventSource.ShowPII = true;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

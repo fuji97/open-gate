@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Logging;
 using Microsoft.OpenApi.Models;
 using Skoruba.AuditLogging.EntityFramework.Entities;
 using OpenGate.Admin.Api.Configuration;
@@ -99,6 +100,10 @@ namespace OpenGate.Admin.Api
             services.AddAuditEventLogging<AdminAuditLogDbContext, AuditLog>(Configuration);
 
             services.AddIdSHealthChecks<IdentityServerConfigurationDbContext, IdentityServerPersistedGrantDbContext, AdminIdentityDbContext, AdminLogDbContext, AdminAuditLogDbContext>(Configuration, adminApiConfiguration);
+            
+            if (HostingEnvironment.IsDevelopment()) {
+                IdentityModelEventSource.ShowPII = true;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AdminApiConfiguration adminApiConfiguration)
