@@ -84,12 +84,12 @@ services:
   db:
     image: "postgres:12"
     ports:
-      - 1433:1433
+      - 5432:5432
     container_name: skoruba-identityserver4-db
     environment:
       POSTGRES_PASSWORD: "${DB_PASSWORD:-Password_123}"
     volumes:
-      - dbdata:/var/opt/mssql
+      - dbdata:/var/lib/postgresql/data
 
 volumes:
   dbdata:
